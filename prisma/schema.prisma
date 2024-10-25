@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model acc_transaction {
+  id                 String    @id @db.VarChar(50)
+  app_id             String?   @db.VarChar(50)
+  bio_tbl_id         String?   @db.VarChar(50)
+  company_id         String?   @db.VarChar(50)
+  create_time        DateTime? @db.Timestamp(6)
+  creater_code       String?   @db.VarChar(30)
+  creater_id         String?   @db.VarChar(50)
+  creater_name       String?   @db.VarChar(50)
+  op_version         Int?
+  update_time        DateTime? @db.Timestamp(6)
+  updater_code       String?   @db.VarChar(30)
+  updater_id         String?   @db.VarChar(50)
+  updater_name       String?   @db.VarChar(50)
+  acc_zone           String?   @db.VarChar(30)
+  acc_zone_code      String?   @db.VarChar(30)
+  area_name          String?   @db.VarChar(100)
+  capture_photo_path String?   @db.VarChar(200)
+  card_no            String?   @db.VarChar(255)
+  dept_code          String?   @db.VarChar(100)
+  dept_name          String?   @db.VarChar(100)
+  description        String?   @db.VarChar(200)
+  dev_alias          String?   @db.VarChar(100)
+  dev_id             String?   @db.VarChar(255)
+  dev_sn             String?   @db.VarChar(30)
+  event_addr         Int?      @db.SmallInt
+  event_name         String?   @db.VarChar(100)
+  event_no           Int       @db.SmallInt
+  event_point_id     String?   @db.VarChar(255)
+  event_point_name   String?   @db.VarChar(100)
+  event_point_type   Int?      @db.SmallInt
+  event_priority     Int?      @db.SmallInt
+  event_time         DateTime  @db.Timestamp(6)
+  last_name          String?   @db.VarChar(50)
+  log_id             Int?
+  mask_flag          String?   @db.VarChar(10)
+  name               String?   @db.VarChar(50)
+  pin                String?   @db.VarChar(30)
+  reader_name        String?   @db.VarChar(100)
+  reader_state       Int?      @db.SmallInt
+  temperature        String?   @db.VarChar(50)
+  trigger_cond       Int?      @db.SmallInt
+  unique_key         String?   @unique(map: "uk_6b0x8u1iijbubj0jol10j9hp9") @db.VarChar(250)
+  verify_mode_name   String?   @db.VarChar(500)
+  verify_mode_no     Int?      @db.SmallInt
+  vid_linkage_handle String?   @db.VarChar(256)
+
+  @@index([create_time], map: "acc_transaction_crt_idx")
+  @@index([event_time], map: "acc_transaction_evt_idx")
+  @@index([update_time], map: "acc_transaction_upt_idx")
+}
+
+model Employee {
+  id       String @id @default(cuid())
+  name     String
+  position String
+}

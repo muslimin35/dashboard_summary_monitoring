@@ -1,100 +1,152 @@
+"use client"; // Add this at the top of your component file
+
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faUser,
+  faUsers,
+  faCar,
+  faUserCheck,
+  faUserTimes,
+  faCarSide,
+} from "@fortawesome/free-solid-svg-icons";
+import moment from "moment";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
+import Logo6 from "../app/asset/Logo.png";
+
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const REFRESH_INTERVAL = parseInt(process.env.NEXT_PUBLIC_REFRESH_INTERVAL, 10);
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const today = moment().format("YYYY-MM-DD");
+  const [date, setDate] = useState(today);
+  const [data, setData] = useState({
+    employeeIn: 0,
+    employeeOut: 0,
+    visitorIn: 0,
+    visitorOut: 0,
+    vehicleIn: 0,
+    vehicleOut: 0,
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
+  const fetchData = async (dateParam) => {
+    setIsLoading(true); // Start loading
+    try {
+      const [employeeRes, visitorRes, vehicleRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/count_employee?date=${dateParam}`),
+        fetch(`${API_BASE_URL}/count_visitor?date=${dateParam}`),
+        fetch(`${API_BASE_URL}/count_vehicle?date=${dateParam}`),
+      ]);
+
+      const employeeData = await employeeRes.json();
+      const visitorData = await visitorRes.json();
+      const vehicleData = await vehicleRes.json();
+
+      setData({
+        employeeIn: employeeData.employeeInCount || 0,
+        employeeOut: employeeData.employeeOutCount || 0,
+        visitorIn: visitorData.visitorInCount || 0,
+        visitorOut: visitorData.visitorOutCount || 0,
+        vehicleIn: vehicleData.vehicleInCount || 0,
+        vehicleOut: vehicleData.vehicleOutCount || 0,
+      });
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 2000);
+    }
+  };
+
+  useEffect(() => {
+    fetchData(date);
+
+    const intervalId = setInterval(() => {
+      fetchData(date);
+    }, REFRESH_INTERVAL);
+
+    return () => clearInterval(intervalId);
+  }, [date]);
+
+  const handleDateChange = (e) => {
+    const selectedDate = e.target.value;
+    if (moment(selectedDate).isAfter(today)) {
+      alert("Date cannot be in the future. Please select a valid date.");
+    } else {
+      setDate(selectedDate);
+    }
+  };
+
+
+  return (
+    <div className="bg-white min-h-screen">
+      {/* Navbar */}
+      <div className="navbar bg-white border-b-4 border-blue-600 flex justify-between items-center p-4">
+        <div className="flex items-center">
+          <Image
+            alt="logo"
+            src={Logo6}
+            width={60}
+            height={60}
+            style={{ marginLeft: "10px" }}
+          />
+          <a className="font-bold text-xl text-blue-600">
+            PLN <br></br> UPT Purworejo
           </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+          {isLoading && (
+            <div className="ml-2 w-6 h-6 border-4 border-t-blue-600 border-blue-300 rounded-full animate-spin"></div>
+          )}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+        <div className="flex items-center">
+          <span className="font-bold text-blue-900 text-xl mr-4">Today's Information</span>
+          <input
+            type="date"
+            value={date}
+            onChange={handleDateChange}
+            max={today}
+            className="border-2 rounded py-1 px-3"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+        </div>
+      </div>
+
+      {/* Grid Layout */}
+      <div className="container mx-auto p-4 grid gap-6 grid-cols-1 md:grid-cols-3 mt-14">
+        {/* Card Component */}
+        {[
+          { title: "Employee IN", value: data.employeeIn, bg: "bg-green-700", icon: faUserCheck },
+          { title: "Visitor IN", value: data.visitorIn, bg: "bg-blue-900", icon: faUsers },
+          { title: "Vehicle IN", value: data.vehicleIn, bg: "bg-teal-700", icon: faCar },
+          { title: "Employee OUT", value: data.employeeOut, bg: "bg-red-600", icon: faUserTimes },
+          { title: "Visitor OUT", value: data.visitorOut, bg: "bg-red-900", icon: faUser },
+          { title: "Vehicle OUT", value: data.vehicleOut, bg: "bg-black", icon: faCarSide },
+        ].map((card, index) => (
+          <div key={index} className={`card ${card.bg} text-white w-full h-52 flex flex-col justify-between p-4 rounded-lg shadow-lg`}>
+            {/* Top Section: Icon and Value */}
+            <div className="flex justify-between items-center">
+              <FontAwesomeIcon icon={card.icon} size="5x" />
+              <p className="text-4xl font-extrabold">{card.value}</p>
+            </div>
+
+            {/* Full-width HR with background matching */}
+            <hr className="border-0 h-1 w-full bg-white mt-2" />
+
+            {/* Bottom Section: Title */}
+            <div className="flex justify-start">
+              <p className="text-xl font-bold">{card.title}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Footer */}
+      <footer className="footer footer-center p-2 text-black bg-white mt-6">
+        <div>
+          <p className="font-bold">Summary Counting of data per day</p>
+          <p className="font-bold">Copyright © 2024</p>
+        </div>
       </footer>
     </div>
   );
