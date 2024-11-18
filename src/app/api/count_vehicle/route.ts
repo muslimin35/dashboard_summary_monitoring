@@ -1,12 +1,12 @@
-import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { NextResponse } from "next/server";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 export async function GET(req: Request) {
   // Extracting the date parameter from the query string
   const url = new URL(req.url);
-  const dateParam = url.searchParams.get('date');
+  const dateParam = url.searchParams.get("date");
 
   let vehicleInCount = 0;
   let vehicleOutCount = 0;
@@ -15,10 +15,13 @@ export async function GET(req: Request) {
   // If a date parameter is provided, validate it
   if (dateParam) {
     const filterDate = new Date(dateParam);
-    
+
     // Check if the date is valid
     if (isNaN(filterDate.getTime())) {
-      return NextResponse.json({ error: 'Invalid date format' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid date format" },
+        { status: 400 }
+      );
     }
 
     // Set start and end time for the specific date
@@ -35,21 +38,41 @@ export async function GET(req: Request) {
       },
     });
 
-    transactions.forEach(transaction => {
+    transactions.forEach((transaction) => {
       const { pin, event_point_name } = transaction;
 
       // Check for vehicle IN logic
-      if (!pin.startsWith('8') && event_point_name.startsWith('BG') && event_point_name.endsWith('IN')) {
+      if (
+        !pin.startsWith("8") &&
+        event_point_name.startsWith("BG") &&
+        event_point_name.endsWith("IN") &&
+        event_point_name != ""
+      ) {
         vehicleInCount += 1;
-      } else if (pinMap.has(pin) && event_point_name.startsWith('BG') && event_point_name.endsWith('IN')) {
+      } else if (
+        pinMap.has(pin) &&
+        event_point_name.startsWith("BG") &&
+        event_point_name.endsWith("IN") &&
+        event_point_name != ""
+      ) {
         vehicleInCount += 1;
         vehicleOutCount -= 1; // decrement OUT for same pin
       }
       //diganti jadi reader_name
       // Check for vehicle OUT logic
-      if (!pin.startsWith('8') && event_point_name.startsWith('BG') && event_point_name.endsWith('OUT')) {
+      if (
+        !pin.startsWith("8") &&
+        event_point_name.startsWith("BG") &&
+        event_point_name.endsWith("OUT") &&
+        event_point_name != ""
+      ) {
         vehicleOutCount += 1;
-      } else if (pinMap.has(pin) && event_point_name.startsWith('BG') && event_point_name.endsWith('OUT')) {
+      } else if (
+        pinMap.has(pin) &&
+        event_point_name.startsWith("BG") &&
+        event_point_name.endsWith("OUT") &&
+        event_point_name != ""
+      ) {
         vehicleOutCount += 1;
         vehicleInCount -= 1; // decrement IN for same pin
       }

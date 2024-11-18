@@ -1,11 +1,11 @@
-import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { NextResponse } from "next/server";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const dateParam = url.searchParams.get('date');
+  const dateParam = url.searchParams.get("date");
 
   let employeeInCount = 0;
   let employeeOutCount = 0;
@@ -15,7 +15,10 @@ export async function GET(req: Request) {
     const filterDate = new Date(dateParam);
 
     if (isNaN(filterDate.getTime())) {
-      return NextResponse.json({ error: 'Invalid date format' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid date format" },
+        { status: 400 }
+      );
     }
 
     const startOfDay = filterDate.setHours(0, 0, 0, 0);
@@ -30,33 +33,61 @@ export async function GET(req: Request) {
       },
     });
 
-    transactions.forEach(transaction => {
+    transactions.forEach((transaction) => {
       const { pin, event_point_name } = transaction;
 
       // Employee IN
-      if (!pin.startsWith('8') && event_point_name.startsWith('TS') && event_point_name.endsWith('IN')) {
+      if (
+        !pin.startsWith("8") &&
+        event_point_name.startsWith("TS") &&
+        event_point_name.endsWith("IN") &&
+        event_point_name != ""
+      ) {
         employeeInCount += 1;
-      } else if (pinMap.has(pin) && event_point_name.startsWith('TS') && event_point_name.endsWith('IN')) {
+      } else if (
+        pinMap.has(pin) &&
+        event_point_name.startsWith("TS") &&
+        event_point_name.endsWith("IN") &&
+        event_point_name != ""
+      ) {
         employeeInCount += 1;
         employeeOutCount -= 1;
       }
 
       // Employee OUT
-      if (!pin.startsWith('8') && event_point_name.startsWith('TS') && event_point_name.endsWith('OUT')) {
+      if (
+        !pin.startsWith("8") &&
+        event_point_name.startsWith("TS") &&
+        event_point_name.endsWith("OUT") &&
+        event_point_name != ""
+      ) {
         employeeOutCount += 1;
-      } else if (pinMap.has(pin) && event_point_name.startsWith('TS') && event_point_name.endsWith('OUT')) {
+      } else if (
+        pinMap.has(pin) &&
+        event_point_name.startsWith("TS") &&
+        event_point_name.endsWith("OUT") &&
+        event_point_name != ""
+      ) {
         employeeOutCount += 1;
         employeeInCount -= 1;
       }
 
       // Vehicle IN
-      if (event_point_name.startsWith('BG') && event_point_name.endsWith('IN')) {
+      if (
+        event_point_name.startsWith("BG") &&
+        event_point_name.endsWith("IN") &&
+        event_point_name != ""
+      ) {
         employeeInCount += 1; // Count as employee IN
         employeeOutCount -= 1; // Adjust OUT count
       }
 
       // Vehicle OUT
-      if (event_point_name.startsWith('BG') && event_point_name.endsWith('OUT')) {
+      if (
+        event_point_name.startsWith("BG") &&
+        event_point_name.endsWith("OUT") &&
+        event_point_name != ""
+      ) {
         employeeOutCount += 1; // Count as employee OUT
         employeeInCount -= 1; // Adjust IN count
       }
