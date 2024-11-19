@@ -56,7 +56,7 @@ export async function GET(req: Request) {
         reader_name != ""
       ) {
         visitorInCount += 1;
-        // visitorOutCount -= 1; // decrement OUT for same pin
+        visitorOutCount -= 1; // decrement OUT for same pin
       }
 
       // Check for visitor OUT logic
