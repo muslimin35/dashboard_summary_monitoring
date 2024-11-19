@@ -39,21 +39,21 @@ export async function GET(req: Request) {
     });
 
     transactions.forEach((transaction) => {
-      const { pin, event_point_name } = transaction;
+      const { pin, reader_name } = transaction;
 
       // Check for visitor IN logic
       if (
         pin.startsWith("8") &&
-        event_point_name.startsWith("TS") &&
-        event_point_name.endsWith("IN") &&
-        event_point_name != ""
+        reader_name.startsWith("TS") &&
+        reader_name.endsWith("IN") &&
+        reader_name != ""
       ) {
         visitorInCount += 1;
       } else if (
         pinMap.has(pin) &&
-        event_point_name.startsWith("TS") &&
-        event_point_name.endsWith("IN") &&
-        event_point_name != ""
+        reader_name.startsWith("TS") &&
+        reader_name.endsWith("IN") &&
+        reader_name != ""
       ) {
         visitorInCount += 1;
         // visitorOutCount -= 1; // decrement OUT for same pin
@@ -62,19 +62,41 @@ export async function GET(req: Request) {
       // Check for visitor OUT logic
       if (
         pin.startsWith("8") &&
-        event_point_name.startsWith("TS") &&
-        event_point_name.endsWith("OUT") &&
-        event_point_name != ""
+        reader_name.startsWith("TS") &&
+        reader_name.endsWith("OUT") &&
+        reader_name != ""
       ) {
         visitorOutCount += 1;
       } else if (
         pinMap.has(pin) &&
-        event_point_name.startsWith("TS") &&
-        event_point_name.endsWith("OUT") &&
-        event_point_name != ""
+        reader_name.startsWith("TS") &&
+        reader_name.endsWith("OUT") &&
+        reader_name != ""
       ) {
         visitorOutCount += 1;
-        // visitorInCount -= 1; // decrement IN for same pin
+        visitorInCount -= 1; // decrement IN for same pin
+      }
+
+      // Vehicle IN
+      if (
+        pin.startsWith("8") &&
+        reader_name.startsWith("BG") &&
+        reader_name.endsWith("IN") &&
+        reader_name != ""
+      ) {
+        visitorInCount += 1; // Count as employee IN
+        visitorOutCount -= 1; // Adjust OUT count
+      }
+
+      // Vehicle OUT
+      if (
+        pin.startsWith("8") &&
+        reader_name.startsWith("BG") &&
+        reader_name.endsWith("OUT") &&
+        reader_name != ""
+      ) {
+        visitorOutCount += 1; // Count as employee OUT
+        visitorInCount -= 1; // Adjust IN count
       }
 
       // Track pins to check for duplicates

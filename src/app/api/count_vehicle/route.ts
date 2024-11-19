@@ -39,21 +39,21 @@ export async function GET(req: Request) {
     });
 
     transactions.forEach((transaction) => {
-      const { pin, event_point_name } = transaction;
+      const { pin, reader_name } = transaction;
 
       // Check for vehicle IN logic
       if (
         !pin.startsWith("8") &&
-        event_point_name.startsWith("BG") &&
-        event_point_name.endsWith("IN") &&
-        event_point_name != ""
+        reader_name.startsWith("BG") &&
+        reader_name.endsWith("IN") &&
+        reader_name != ""
       ) {
         vehicleInCount += 1;
       } else if (
         pinMap.has(pin) &&
-        event_point_name.startsWith("BG") &&
-        event_point_name.endsWith("IN") &&
-        event_point_name != ""
+        reader_name.startsWith("BG") &&
+        reader_name.endsWith("IN") &&
+        reader_name != ""
       ) {
         vehicleInCount += 1;
         vehicleOutCount -= 1; // decrement OUT for same pin
@@ -62,16 +62,16 @@ export async function GET(req: Request) {
       // Check for vehicle OUT logic
       if (
         !pin.startsWith("8") &&
-        event_point_name.startsWith("BG") &&
-        event_point_name.endsWith("OUT") &&
-        event_point_name != ""
+        reader_name.startsWith("BG") &&
+        reader_name.endsWith("OUT") &&
+        reader_name != ""
       ) {
         vehicleOutCount += 1;
       } else if (
         pinMap.has(pin) &&
-        event_point_name.startsWith("BG") &&
-        event_point_name.endsWith("OUT") &&
-        event_point_name != ""
+        reader_name.startsWith("BG") &&
+        reader_name.endsWith("OUT") &&
+        reader_name != ""
       ) {
         vehicleOutCount += 1;
         vehicleInCount -= 1; // decrement IN for same pin
