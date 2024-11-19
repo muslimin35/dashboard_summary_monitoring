@@ -94,21 +94,14 @@ export default function Home() {
             style={{ marginLeft: "10px" }}
           />
           <a className="font-bold text-xl text-blue-600">
-            PLN <br></br> UPT Purworejo
+            PLN <br></br> UPT Purwokerto
           </a>
           {isLoading && (
             <div className="ml-2 w-6 h-6 border-4 border-t-blue-600 border-blue-300 rounded-full animate-spin"></div>
           )}
         </div>
         <div className="flex items-center">
-          <span className="font-bold text-blue-900 text-xl mr-4">Today's Information</span>
-          <input
-            type="date"
-            value={date}
-            onChange={handleDateChange}
-            max={today}
-            className="border-2 rounded py-1 px-3"
-          />
+          
         </div>
       </div>
 

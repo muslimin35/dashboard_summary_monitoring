@@ -21,55 +21,45 @@ export async function GET(req: Request) {
       );
     }
 
-    const startOfDay = filterDate.setHours(0, 0, 0, 0);
-    const endOfDay = filterDate.setHours(23, 59, 59, 999);
 
     const transactions = await prisma.acc_transaction.findMany({
       where: {
-        create_time: {
-          gte: new Date(startOfDay),
-          lte: new Date(endOfDay),
-        },
       },
     });
-
     transactions.forEach((transaction) => {
       const { pin, reader_name, event_name } = transaction;
-
+      function isValidPin(pin: string | null, pinMap: Map<string, number>): boolean {
+        return pin !== null && pinMap.has(pin);
+      }
       // Employee IN
       if (
         !pin.startsWith("8") &&
         reader_name.startsWith("TS") &&
         reader_name.endsWith("IN") &&
-        reader_name != "" && event_name == 'acc_newEventNo_0'
+        reader_name != "" && event_name == 'acc_newEventNo_222'
       ) {
         employeeInCount += 1;
-      } else if (
-        pinMap.has(pin) &&
-        reader_name.startsWith("TS") &&
-        reader_name.endsWith("IN") &&
-        reader_name != "" && event_name == 'acc_newEventNo_0'
-      ) {
-        employeeInCount += 1;
-        employeeOutCount -= 1;
+        if (isValidPin(pin, pinMap)) {
+          // If the same PIN is used for IN and OUT, reduce IN count
+          employeeOutCount -= 1;
+        }
       }
 
       // Employee OUT
       if (
-        !pin.startsWith("8") &&
         reader_name.startsWith("TS") &&
         reader_name.endsWith("OUT") &&
-        reader_name != "" && event_name == 'acc_newEventNo_0'
+        reader_name !== "" &&
+        event_name === "acc_newEventNo_222"
       ) {
-        employeeOutCount += 1;
-      } else if (
-        pinMap.has(pin) &&
-        reader_name.startsWith("TS") &&
-        reader_name.endsWith("OUT") &&
-        reader_name != "" && event_name == 'acc_newEventNo_0'
-      ) {
-        employeeOutCount += 1;
-        employeeInCount -= 1;
+        if (!pin.startsWith("8")) {
+          // Normal OUT logic
+          employeeOutCount += 1;
+          if (isValidPin(pin, pinMap)) {
+            // If the same PIN is used for IN and OUT, reduce IN count
+            employeeInCount -= 1;
+          }
+        }
       }
 
       // Vehicle IN
@@ -77,28 +67,34 @@ export async function GET(req: Request) {
         !pin.startsWith("8") &&
         reader_name.startsWith("BG") &&
         reader_name.endsWith("IN") &&
-        reader_name != "" && event_name == 'acc_newEventNo_0'
+        reader_name != "" && event_name == 'acc_newEventNo_222'
       ) {
         employeeInCount += 1; // Count as employee IN
-        employeeOutCount -= 1; // Adjust OUT count
+        if (isValidPin(pin, pinMap)) {
+          // If the same PIN is used for IN and OUT, reduce IN count
+          employeeOutCount -= 1;
+        }
       }
 
       // Vehicle OUT
       if (
-        !pin.startsWith("8") &&
         reader_name.startsWith("BG") &&
         reader_name.endsWith("OUT") &&
-        reader_name != "" && event_name == 'acc_newEventNo_0'
+        reader_name !== "" &&
+        event_name === "acc_newEventNo_222"
       ) {
-        employeeOutCount += 1; // Count as employee OUT
-        employeeInCount -= 1; // Adjust IN count
+        if (!pin.startsWith("8")) {
+          // Normal OUT logic
+          employeeOutCount += 1;
+          if (isValidPin(pin, pinMap)) {
+            // If the same PIN is used for IN and OUT, reduce IN count
+            employeeInCount -= 1;
+          }
+        }
       }
 
       pinMap.set(pin, (pinMap.get(pin) || 0) + 1);
     });
-  } else {
-    const transactions = await prisma.acc_transaction.findMany();
-    // Logic for counting all transactions if needed
   }
 
   return NextResponse.json({ employeeInCount, employeeOutCount });

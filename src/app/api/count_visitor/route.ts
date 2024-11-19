@@ -24,57 +24,47 @@ export async function GET(req: Request) {
       );
     }
 
-    // Set start and end time for the specific date
-    const startOfDay = filterDate.setHours(0, 0, 0, 0);
-    const endOfDay = filterDate.setHours(23, 59, 59, 999);
 
-    // Fetch transactions for the specified date
     const transactions = await prisma.acc_transaction.findMany({
       where: {
-        create_time: {
-          gte: new Date(startOfDay),
-          lte: new Date(endOfDay),
-        },
       },
     });
 
     transactions.forEach((transaction) => {
       const { pin, reader_name, event_name } = transaction;
-
+      function isValidPin(pin: string | null, pinMap: Map<string, number>): boolean {
+        return pin !== null && pinMap.has(pin);
+      }      
       // Check for visitor IN logic
       if (
         pin.startsWith("8") &&
         reader_name.startsWith("TS") &&
         reader_name.endsWith("IN") &&
-        reader_name != "" && event_name == 'acc_newEventNo_0'
+        reader_name != "" && event_name == 'acc_newEventNo_222'
       ) {
         visitorInCount += 1;
-      } else if (
-        pinMap.has(pin) &&
-        reader_name.startsWith("TS") &&
-        reader_name.endsWith("IN") &&
-        reader_name != "" && event_name == 'acc_newEventNo_0'
-      ) {
-        visitorInCount += 1;
-        visitorOutCount -= 1; // decrement OUT for same pin
+        if (isValidPin(pin, pinMap)) {
+          // If the same PIN is used for IN and OUT, reduce IN count
+          visitorOutCount -= 1;
+        }
       }
 
       // Check for visitor OUT logic
+      // Employee OUT
       if (
-        pin.startsWith("8") &&
         reader_name.startsWith("TS") &&
         reader_name.endsWith("OUT") &&
-        reader_name != "" && event_name == 'acc_newEventNo_0'
+        reader_name !== "" &&
+        event_name === "acc_newEventNo_222"
       ) {
-        visitorOutCount += 1;
-      } else if (
-        pinMap.has(pin) &&
-        reader_name.startsWith("TS") &&
-        reader_name.endsWith("OUT") &&
-        reader_name != "" && event_name == 'acc_newEventNo_0'
-      ) {
-        visitorOutCount += 1;
-        visitorInCount -= 1; // decrement IN for same pin
+        if (pin.startsWith("8")) {
+          // Normal OUT logic
+          visitorOutCount += 1;
+          if (isValidPin(pin, pinMap)) {
+            // If the same PIN is used for IN and OUT, reduce IN count
+            visitorInCount -= 1;
+          }
+        }
       }
 
       // Vehicle IN
@@ -82,31 +72,41 @@ export async function GET(req: Request) {
         pin.startsWith("8") &&
         reader_name.startsWith("BG") &&
         reader_name.endsWith("IN") &&
-        reader_name != "" && event_name == 'acc_newEventNo_0'
+        reader_name != "" && event_name == 'acc_newEventNo_222'
       ) {
         visitorInCount += 1; // Count as employee IN
-        visitorOutCount -= 1; // Adjust OUT count
+        if (isValidPin(pin, pinMap)) {
+          // If the same PIN is used for IN and OUT, reduce IN count
+          visitorOutCount -= 1;
+        }
       }
 
       // Vehicle OUT
       if (
-        pin.startsWith("8") &&
         reader_name.startsWith("BG") &&
         reader_name.endsWith("OUT") &&
-        reader_name != "" && event_name == 'acc_newEventNo_0'
+        reader_name !== "" &&
+        event_name === "acc_newEventNo_222"
       ) {
-        visitorOutCount += 1; // Count as employee OUT
-        visitorInCount -= 1; // Adjust IN count
+        if (pin.startsWith("8")) {
+          // Normal OUT logic
+          visitorOutCount += 1;
+          if (isValidPin(pin, pinMap)) {
+            // If the same PIN is used for IN and OUT, reduce IN count
+            visitorInCount -= 1;
+          }
+        }
       }
 
       // Track pins to check for duplicates
       pinMap.set(pin, (pinMap.get(pin) || 0) + 1);
     });
-  } else {
-    // If no date parameter is provided, you might want to fetch all transactions
-    const transactions = await prisma.acc_transaction.findMany();
-    // (You can repeat the counting logic here if you want to count for all dates)
   }
 
-  return NextResponse.json({ visitorInCount, visitorOutCount });
+  // Ensure counts are not negative
+  const safeVisitorInCount = Math.max(visitorInCount, 0);
+  const safeVisitorOutCount = Math.max(visitorOutCount, 0);
+
+  return NextResponse.json({ visitorInCount: safeVisitorInCount, visitorOutCount: safeVisitorOutCount });
+
 }

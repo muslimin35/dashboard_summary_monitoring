@@ -24,66 +24,48 @@ export async function GET(req: Request) {
       );
     }
 
-    // Set start and end time for the specific date
-    const startOfDay = filterDate.setHours(0, 0, 0, 0);
-    const endOfDay = filterDate.setHours(23, 59, 59, 999);
-
-    // Fetch transactions for the specified date
     const transactions = await prisma.acc_transaction.findMany({
       where: {
-        create_time: {
-          gte: new Date(startOfDay),
-          lte: new Date(endOfDay),
-        },
       },
     });
 
     transactions.forEach((transaction) => {
       const { pin, reader_name, event_name } = transaction;
-
-      // Check for vehicle IN logic
-      if (
-        !pin.startsWith("8") &&
-        reader_name.startsWith("BG") &&
-        reader_name.endsWith("IN") &&
-        reader_name != "" && event_name == 'acc_newEventNo_0'
-      ) {
-        vehicleInCount += 1;
-      } else if (
-        pinMap.has(pin) &&
-        reader_name.startsWith("BG") &&
-        reader_name.endsWith("IN") &&
-        reader_name != "" && event_name == 'acc_newEventNo_0'
-      ) {
-        vehicleInCount += 1;
-        vehicleOutCount -= 1; // decrement OUT for same pin
+      function isValidPin(pin: string | null, pinMap: Map<string, number>): boolean {
+        return pin !== null && pinMap.has(pin);
       }
-      //diganti jadi reader_name
-      // Check for vehicle OUT logic
+      // Check for vehicle IN logic
+      // Vehicle IN
       if (
-        !pin.startsWith("8") &&
+        reader_name.startsWith("BG") &&
+        reader_name.endsWith("IN") &&
+        reader_name != "" && event_name == 'acc_newEventNo_222'
+      ) {
+        vehicleInCount += 1; // Count as employee IN
+        if (isValidPin(pin, pinMap)) {
+          // If the same PIN is used for IN and OUT, reduce IN count
+          vehicleOutCount -= 1;
+        }
+      }
+
+      // Vehicle OUT
+      if (
         reader_name.startsWith("BG") &&
         reader_name.endsWith("OUT") &&
-        reader_name != "" && event_name == 'acc_newEventNo_0'
+        reader_name !== "" &&
+        event_name === "acc_newEventNo_222"
       ) {
-        vehicleOutCount += 1;
-      } else if (
-        pinMap.has(pin) &&
-        reader_name.startsWith("BG") &&
-        reader_name.endsWith("OUT") &&
-        reader_name != "" && event_name == 'acc_newEventNo_0'
-      ) {
-        vehicleOutCount += 1;
-        vehicleInCount -= 1; // decrement IN for same pin
+          // Normal OUT logic
+          vehicleOutCount += 1;
+          if (isValidPin(pin, pinMap)) {
+            // If the same PIN is used for IN and OUT, reduce IN count
+            vehicleInCount -= 1;
+        }
       }
 
       // Track pins to check for duplicates
       pinMap.set(pin, (pinMap.get(pin) || 0) + 1);
     });
-  } else {
-    // If no date parameter is provided, you might want to fetch all transactions
-    const transactions = await prisma.acc_transaction.findMany();
-    // (You can repeat the counting logic here if you want to count for all dates)
   }
 
   return NextResponse.json({ vehicleInCount, vehicleOutCount });
