@@ -34,21 +34,21 @@ export async function GET(req: Request) {
     });
 
     transactions.forEach((transaction) => {
-      const { pin, reader_name } = transaction;
+      const { pin, reader_name, event_name } = transaction;
 
       // Employee IN
       if (
         !pin.startsWith("8") &&
         reader_name.startsWith("TS") &&
         reader_name.endsWith("IN") &&
-        reader_name != ""
+        reader_name != "" && event_name == 'acc_newEventNo_0'
       ) {
         employeeInCount += 1;
       } else if (
         pinMap.has(pin) &&
         reader_name.startsWith("TS") &&
         reader_name.endsWith("IN") &&
-        reader_name != ""
+        reader_name != "" && event_name == 'acc_newEventNo_0'
       ) {
         employeeInCount += 1;
         employeeOutCount -= 1;
@@ -59,14 +59,14 @@ export async function GET(req: Request) {
         !pin.startsWith("8") &&
         reader_name.startsWith("TS") &&
         reader_name.endsWith("OUT") &&
-        reader_name != ""
+        reader_name != "" && event_name == 'acc_newEventNo_0'
       ) {
         employeeOutCount += 1;
       } else if (
         pinMap.has(pin) &&
         reader_name.startsWith("TS") &&
         reader_name.endsWith("OUT") &&
-        reader_name != ""
+        reader_name != "" && event_name == 'acc_newEventNo_0'
       ) {
         employeeOutCount += 1;
         employeeInCount -= 1;
@@ -77,7 +77,7 @@ export async function GET(req: Request) {
         !pin.startsWith("8") &&
         reader_name.startsWith("BG") &&
         reader_name.endsWith("IN") &&
-        reader_name != ""
+        reader_name != "" && event_name == 'acc_newEventNo_0'
       ) {
         employeeInCount += 1; // Count as employee IN
         employeeOutCount -= 1; // Adjust OUT count
@@ -88,7 +88,7 @@ export async function GET(req: Request) {
         !pin.startsWith("8") &&
         reader_name.startsWith("BG") &&
         reader_name.endsWith("OUT") &&
-        reader_name != ""
+        reader_name != "" && event_name == 'acc_newEventNo_0'
       ) {
         employeeOutCount += 1; // Count as employee OUT
         employeeInCount -= 1; // Adjust IN count
